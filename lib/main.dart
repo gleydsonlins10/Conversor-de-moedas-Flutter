@@ -7,7 +7,17 @@ const request = "https://api.hgbrasil.com/finance?format=json&key=6fc17c7c";
 
 void main() async {
   runApp(MaterialApp(
-    home: Home()
+    home: Home(),
+    theme: ThemeData(
+        hintColor: Colors.amber,
+        primaryColor: Colors.white,
+        inputDecorationTheme: InputDecorationTheme(
+          enabledBorder:
+          OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          focusedBorder:
+          OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+          hintStyle: TextStyle(color: Colors.amber),
+        )),
   ));
 }
 
@@ -22,6 +32,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  final realController = new TextEditingController();
+  final euroController = new TextEditingController();
+  final dolarController = new TextEditingController();
+
+  double dolar;
+  double euro;
+
+  void _realChanged(String text) {
+      print(text);
+  }
+
+  void _dolarChanged(String text) {
+    print(text);
+  }
+
+  void _euroChanged(String text) {
+    print(text);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +61,64 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.amber,
         centerTitle: true,
       ),
+      body: FutureBuilder<Map>(
+          future: getData(),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+                return Center(
+                  child: Text("Carregando Dados...",
+                    style: TextStyle(color: Colors.amber, fontSize: 25.0
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              default:
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text("Erro ao carregar dados :(",
+                      style: TextStyle(color: Colors.amber, fontSize: 25.0),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                } else {
+                  dolar = snapshot.data["results"]["currencies"]["USD"]["buy"];
+                  euro = snapshot.data["results"]["currencies"]["EUR"]["buy"];
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Icon(Icons.monetization_on, size: 150.0,color: Colors.amber),
+                        getWidgetTextField("Reais","R\$",realController, _realChanged),
+                        Divider(),
+                        getWidgetTextField("Dolares","ES\$", dolarController,_dolarChanged),
+                        Divider(),
+                        getWidgetTextField("Euros","E\$", euroController,_euroChanged),
+                      ],
+                    ),
+                  );
+                }
+            }
+          }
+      ),
     );
   }
+}
+
+Widget getWidgetTextField(String label, String prefixe, TextEditingController controller, Function fun ) {
+  return TextField(
+    decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.amber),
+        border: OutlineInputBorder(),
+        prefixText: prefixe
+    ),
+    style: TextStyle(
+        color: Colors.amber, fontSize: 25.0
+    ),
+    onChanged: fun,
+    keyboardType: TextInputType.number,
+  );
 }
